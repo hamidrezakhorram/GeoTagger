@@ -10,13 +10,15 @@ from .forms import LocationForm
 import csv
 from django.http import HttpResponse
 import json
+from rest_framework.response import Response
+from django.core.serializers import serialize
+from rest_framework.decorators import api_view
 class LocationView(viewsets.ModelViewSet):
     queryset =Location.objects.all()
     serializer_class = LocationSerializer
 
 class MapView(TemplateView):
     template_name = "locations\map.html"
-
 def search_nearby(request):
     try:
         lat = request.GET.get('lat')
