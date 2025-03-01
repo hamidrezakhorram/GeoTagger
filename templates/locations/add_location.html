@@ -1,12 +1,82 @@
 <!DOCTYPE html>
-<html>
-<head><title>Add Location</title></head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Location</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
 <body>
-    <h1>Add a New Location</h1>
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Save</button>
+        <label for="id_name">Location Name:</label>
+        {{ form.name }}
+
+        <label for="id_description">Description:</label>
+        {{ form.description }}
+
+        <div id="map" style="height: 300px;"></div>
+
+        <label for="id_latitude">Latitude:</label>
+        <input type="text" id="id_latitude" name="latitude" readonly>
+
+        <label for="id_longitude">Longitude:</label>
+        <input type="text" id="id_longitude" name="longitude" readonly>
+
+        <p><strong>Hover Coordinates:</strong> <span id="hover-coords">Move mouse over the map</span></p>
+
+        <button type="submit">Add Location</button>
     </form>
+
+    <script>
+        var map = L.map('map').setView([0, 0], 2);  // Default view
+
+        // Load OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // Default marker at center
+        var marker = L.marker([0, 0], { draggable: true }).addTo(map);
+
+        // 🛰️ Get user's current location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    var userLat = position.coords.latitude;
+                    var userLng = position.coords.longitude;
+
+                    map.setView([userLat, userLng], 13);  // Zoom to user's location
+                    marker.setLatLng([userLat, userLng]);  // Move marker to user's location
+
+                    document.getElementById('id_latitude').value = userLat;
+                    document.getElementById('id_longitude').value = userLng;
+                },
+                function () {
+                    console.warn("Geolocation permission denied.");
+                }
+            );
+        } else {
+            console.warn("Geolocation is not supported.");
+        }
+
+        // 📍 Update coordinates when marker is dragged
+        marker.on('dragend', function (e) {
+            var latlng = marker.getLatLng();
+            document.getElementById('id_latitude').value = latlng.lat;
+            document.getElementById('id_longitude').value = latlng.lng;
+        });
+
+        // 🖱️ Show coordinates when hovering over map
+        map.on('mousemove', function (e) {
+            document.getElementById('hover-coords').innerText = `Lat: ${e.latlng.lat.toFixed(5)}, Lng: ${e.latlng.lng.toFixed(5)}`;
+        });
+
+        // 📍 Click on map to move marker
+        map.on('click', function (e) {
+            marker.setLatLng(e.latlng);
+            document.getElementById('id_latitude').value = e.latlng.lat;
+            document.getElementById('id_longitude').value = e.latlng.lng;
+        });
+    </script>
 </body>
 </html>

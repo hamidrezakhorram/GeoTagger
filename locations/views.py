@@ -18,27 +18,38 @@ class MapView(TemplateView):
     template_name = "locations\map.html"
 
 def search_nearby(request):
-    lat = float(request.GET.get('lat'))
-    lon = float(request.GET.get('lon'))
-    radius = float(request.GET.get('radius', 10))  # Default 10 km
+    try:
+        lat = request.GET.get('lat')
+        lon = request.GET.get('lon')
+        radius = request.GET.get('radius', 10)  # Default to 10 km
 
-    user_location = Point(lon, lat, srid=4326)
-    locations = Location.objects.annotate(distance=Distance('coordinates', user_location))
-    locations = locations.filter(distance__lte=radius * 1000).order_by('distance')
+        if lat is None or lon is None:
+            return JsonResponse({'error': 'Latitude and longitude are required'}, status=400)
 
-    data = [
-        {'name': loc.name, 'description': loc.description, 'distance_km': loc.distance.km}
-        for loc in locations
-    ]
+        lat = float(lat)
+        lon = float(lon)
+        radius = float(radius)
 
-    return JsonResponse(data, safe=False)
+        user_location = Point(lon, lat, srid=4326)
+        locations = Location.objects.annotate(distance=Distance('coordinates', user_location))
+        locations = locations.filter(distance__lte=radius * 1000).order_by('distance')
+
+        data = [
+            {'name': loc.name, 'description': loc.description, 'distance_km': loc.distance.km}
+            for loc in locations
+        ]
+
+        return JsonResponse(data, safe=False)
+    
+    except ValueError:
+        return JsonResponse({'error': 'Invalid latitude, longitude, or radius'}, status=400)
 
 def add_location(request):
     if request.method == 'POST':
         form = LocationForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('map')
+            return redirect('locations:map')
     else:
         form = LocationForm()
     return render(request, 'locations/add_location.html', {'form': form})
