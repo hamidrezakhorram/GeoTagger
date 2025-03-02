@@ -23,7 +23,7 @@ def search_nearby(request):
     try:
         lat = request.GET.get('lat')
         lon = request.GET.get('lon')
-        radius = request.GET.get('radius', 10)  # Default to 10 km
+        radius = request.GET.get('radius', 10)  
 
         if lat is None or lon is None:
             return JsonResponse({'error': 'Latitude and longitude are required'}, status=400)

@@ -8,11 +8,11 @@ class LocationForm(forms.ModelForm):
 
     class Meta:
         model = Location
-        fields = ["name", "description", "latitude", "longitude"]  # Explicitly add latitude & longitude
+        fields = ["name", "description", "latitude", "longitude"]  
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        instance.coordinates = Point(self.cleaned_data["longitude"], self.cleaned_data["latitude"])  # Store as a Point
+        instance.coordinates = Point(self.cleaned_data["longitude"], self.cleaned_data["latitude"])  
         if commit:
             instance.save()
         return instance  
